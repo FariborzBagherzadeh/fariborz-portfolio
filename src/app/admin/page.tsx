@@ -176,12 +176,13 @@ function projectValues(formData: FormData) {
 
 async function requireAdmin() {
   const supabase = await createClient();
-  const {
-    data: { claims },
-  } = await supabase.auth.getClaims();
-  const userId = claims?.sub;
 
-  if (!userId) redirect("/admin/login");
+  const { data: claimsResult, error } = await supabase.auth.getClaims();
+  const userId = claimsResult?.claims?.sub;
+
+  if (error || !userId) {
+    redirect("/admin/login");
+  }
 
   const { data: adminUser } = await supabase
     .from("admin_users")
@@ -189,7 +190,10 @@ async function requireAdmin() {
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (!adminUser) redirect("/admin/login");
+  if (!adminUser) {
+    redirect("/admin/login");
+  }
+
   return supabase;
 }
 
