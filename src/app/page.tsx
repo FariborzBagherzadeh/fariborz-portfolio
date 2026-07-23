@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { MotionStyles, Reveal } from "@/components/portfolio-reveal";
-import { ProfilePhoto } from "@/components/profile-photo";
+
 
 type Project = {
   id: number;
