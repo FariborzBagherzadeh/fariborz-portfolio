@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { MotionStyles, Reveal } from "@/components/portfolio-reveal";
-
+import { ProfilePhoto } from "@/components/profile-photo";
 
 type Project = {
   id: number;
@@ -21,6 +21,7 @@ type ProfileContent = {
   github_url?: string;
   linkedin_url?: string;
   availability?: string;
+  profile_photo_url?: string;
 };
 type ExperienceItem = {
   role: string;
@@ -65,7 +66,9 @@ const fallbackProfile: Required<ProfileContent> = {
   github_url: "https://github.com/FariborzBagherzadeh",
   linkedin_url: "https://www.linkedin.com/in/fariborzbagherzadeh",
   availability: "Available immediately",
+  profile_photo_url: "/profile.jpg",
 };
+
 const fallbackResume: Required<ResumeContent> = {
   experience: [
     {
@@ -93,8 +96,8 @@ const fallbackResume: Required<ResumeContent> = {
     {
       title: "AI & LLM Engineering",
       skills: [
-        "React js",
-        "Javascript",
+        "Python",
+        "PyTorch",
         "TensorFlow",
         "Hugging Face",
         "LangChain",
@@ -202,11 +205,15 @@ async function getHomeData() {
       .eq("is_published", true)
       .maybeSingle(),
   ]);
+  const savedProfile = (profileResult.data?.content ?? {}) as ProfileContent;
   return {
     projects: (projectsResult.data ?? []) as Project[],
     profile: {
       ...fallbackProfile,
-      ...((profileResult.data?.content ?? {}) as ProfileContent),
+      ...savedProfile,
+      profile_photo_url:
+        savedProfile.profile_photo_url?.trim() ||
+        fallbackProfile.profile_photo_url,
     },
     resume: mergeResume(resumeResult.data?.content),
   };
@@ -214,140 +221,251 @@ async function getHomeData() {
 
 export default async function Home() {
   const { projects, profile, resume } = await getHomeData();
+  const highlights = resume.skill_groups
+    .flatMap((group) => group.skills)
+    .slice(0, 6);
+
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7faff] text-slate-900">
+    <main className="min-h-screen overflow-hidden bg-slate-50 text-slate-900">
       <MotionStyles />
       <div className="aurora aurora-one motion-aurora-one" />
       <div className="aurora aurora-two motion-aurora-two" />
       <div className="motion-grid" />
-      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6 lg:px-8">
-        <a href="#top" className="brand-mark text-xl font-bold tracking-tight">
-          FB<span className="text-blue-600">.</span>
-        </a>
-        <nav className="hidden items-center gap-6 text-sm font-semibold text-slate-600 md:flex">
-          <a href="#about">About</a>
-          <a href="#experience">Experience</a>
-          <a href="#projects">Projects</a>
-          <a href="#contact">Contact</a>
-        </nav>
+
+      <header className="sticky top-0 z-30 mx-auto max-w-7xl px-4 pt-3 sm:px-6 lg:px-8">
+        <div className="header-shell flex items-center justify-between px-4 py-3 sm:px-5">
+          <a
+            href="#top"
+            className="brand-mark flex items-center gap-2 font-bold tracking-tight"
+            aria-label="Back to top"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-sm text-white shadow-lg shadow-slate-950/15">
+              FB
+            </span>
+            <span className="hidden text-lg sm:block">
+              Fariborz<span className="text-blue-600">.</span>
+            </span>
+          </a>
+          <nav
+            className="hidden items-center gap-5 text-sm font-semibold text-slate-600 lg:flex"
+            aria-label="Primary navigation"
+          >
+            <NavLink href="#about">About</NavLink>
+            <NavLink href="#experience">Experience</NavLink>
+            <NavLink href="#skills">Skills</NavLink>
+            <NavLink href="#projects">Projects</NavLink>
+            <NavLink href="#contact">Contact</NavLink>
+          </nav>
+          <a
+            href={`mailto:${profile.email}`}
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3.5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-700"
+          >
+            <Icon name="mail" className="h-4 w-4" />{" "}
+            <span className="hidden sm:inline">Contact me</span>
+          </a>
+        </div>
       </header>
+
       <section
         id="top"
-        className="relative z-10 mx-auto grid max-w-6xl gap-10 px-6 pb-20 pt-12 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:pb-28 lg:pt-20"
+        className="relative z-10 mx-auto grid max-w-7xl gap-12 px-6 pb-20 pt-16 sm:pt-20 lg:grid-cols-[1.1fr_.9fr] lg:px-8 lg:pb-28"
       >
-        <div className="max-w-3xl hero-copy">
-          <p className="hero-kicker text-sm font-semibold uppercase tracking-[0.16em] text-blue-600">
+        <div className="max-w-3xl self-center">
+          <div className="hero-kicker inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-700">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />{" "}
             {profile.availability}
+          </div>
+          <p className="hero-role mt-7 flex items-center gap-2 text-sm font-bold uppercase tracking-[.18em] text-blue-700">
+            <Icon name="sparkle" className="h-4 w-4" /> {profile.role}
           </p>
-          <h1 className="hero-title mt-5 text-5xl font-bold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
+          <h1 className="hero-title mt-4 text-5xl font-black leading-[.98] tracking-[-.055em] text-slate-950 sm:text-6xl lg:text-7xl">
             {profile.name}
           </h1>
-          <p className="hero-role mt-5 text-xl font-semibold text-blue-700 sm:text-2xl">
-            {profile.role}
-          </p>
-          <p className="hero-body mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+          <p className="hero-body mt-7 max-w-2xl text-lg leading-8 text-slate-600">
             {profile.hero_description}
           </p>
-          <div className="hero-actions mt-9 flex flex-wrap gap-4">
+          <div className="hero-actions mt-9 flex flex-wrap gap-3">
             <a
               href="#projects"
-              className="primary-cta rounded-full bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-500/20"
+              className="primary-cta inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-3.5 font-bold text-white shadow-xl shadow-slate-900/15"
             >
-              Explore my work <span>→</span>
+              Explore my work <Icon name="arrow" className="h-4 w-4" />
             </a>
             <a
               href={`mailto:${profile.email}`}
-              className="secondary-cta rounded-full border border-slate-200 bg-white/70 px-6 py-3 font-semibold text-slate-800"
+              className="secondary-cta inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-5 py-3.5 font-bold text-slate-800"
             >
-              Get in touch
+              <Icon name="mail" className="h-4 w-4 text-blue-600" /> Get in
+              touch
             </a>
           </div>
+          <div className="mt-12 grid max-w-xl grid-cols-3 gap-3 border-t border-slate-200/80 pt-6">
+            <Metric icon="code" label="Full-stack" />
+            <Metric icon="user" label="Front-end" />
+            <Metric icon="cloud" label="Backend" />
+          </div>
         </div>
-        <aside className="glass-card focus-card self-start p-7 md:p-8">
-          <img
-            src="/profile.jpg"
-            alt={`Portrait of ${profile.name}`}
-            className="h-[360px] w-full rounded-2xl object-cover object-center"
-          />
-        </aside>
+        <div className="relative mx-auto w-full max-w-md lg:mx-0 lg:justify-self-end">
+          <div className="profile-photo-card glass-card overflow-hidden p-3 sm:p-4">
+            <div className="profile-photo-frame aspect-[4/4.6]">
+              <ProfilePhoto
+                src={profile.profile_photo_url}
+                alt={`Portrait of ${profile.name}`}
+                className="profile-photo"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 px-2 pb-1 pt-5">
+              <div>
+                <p className="text-sm font-bold text-slate-950">
+                  {profile.name}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">Based in Germany</p>
+              </div>
+              <span className="rounded-xl bg-blue-50 p-2.5 text-blue-700">
+                <Icon name="location" className="h-5 w-5" />
+              </span>
+            </div>
+          </div>
+          <div className="hero-floating-note absolute -bottom-6 -left-5 hidden rounded-2xl border border-white/70 bg-white/90 p-4 shadow-xl shadow-slate-900/10 backdrop-blur sm:block">
+            <div className="flex items-center gap-3">
+              <span className="rounded-xl bg-violet-100 p-2 text-violet-700">
+                <Icon name="briefcase" className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Open to
+                </p>
+                <p className="mt-0.5 text-sm font-bold text-slate-800">
+                  New opportunities
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
+
       <Reveal>
-        <section
-          id="about"
-          className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-8"
-        >
-          <SectionTitle
-            eyebrow="About"
-            title="Useful software, thoughtfully built."
+        <section id="about" className="section-shell">
+          <SectionHeading
+            icon="user"
+            eyebrow="About me"
+            title="Focused on clear, useful web experiences."
+            text="A practical approach to frontend quality, solid APIs, and maintainable products."
           />
-          <div className="glass-card lift-card mt-10 max-w-4xl p-7 md:p-9">
-            <p className="text-lg leading-8 text-slate-600">{profile.about}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              {resume.skill_groups
-                .flatMap((group) => group.skills)
-                .slice(0, 6)
-                .map((skill) => (
+          <div className="mt-9 grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
+            <article className="glass-card lift-card p-7 md:p-9">
+              <p className="text-lg leading-8 text-slate-600">
+                {profile.about}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-2">
+                {highlights.map((skill) => (
                   <Tag key={skill}>{skill}</Tag>
                 ))}
+              </div>
+            </article>
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+              <FocusCard
+                icon="code"
+                title="Build"
+                text="Responsive interfaces and full-stack products"
+              />
+              <FocusCard
+                icon="brain"
+                title="Connect"
+                text="APIs, databases, and practical workflows"
+              />
+              <FocusCard
+                icon="leaf"
+                title="Improve"
+                text="Data-informed software for real problems"
+              />
             </div>
           </div>
         </section>
       </Reveal>
+
       <Reveal>
-        <section
-          id="experience"
-          className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-8"
-        >
-          <SectionTitle
+        <section id="experience" className="section-shell section-rule">
+          <SectionHeading
+            icon="briefcase"
             eyebrow="Experience"
-            title="Building software and applied AI."
+            title="Work with practical impact."
+            text="Roles and projects where software, data, and real-world requirements meet."
           />
-          <div className="mt-10 grid gap-6">
+          <div className="timeline mt-10">
             {resume.experience.map((item, index) => (
-              <Reveal key={`${item.company}-${index}`} delay={index * 90}>
-                <article className="glass-card lift-card p-7 md:p-8">
-                  <ExperienceContent item={item} />
+              <Reveal key={`${item.company}-${index}`} delay={index * 80}>
+                <article className="timeline-item">
+                  <span className="timeline-dot">
+                    <Icon name="briefcase" className="h-4 w-4" />
+                  </span>
+                  <div className="glass-card lift-card p-6 md:p-8">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold text-slate-950 md:text-2xl">
+                          {item.role}
+                        </h3>
+                        <p className="mt-2 font-bold text-blue-700">
+                          {item.company}
+                        </p>
+                        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+                          <Icon name="location" className="h-4 w-4" />
+                          {item.location}
+                        </p>
+                      </div>
+                      <span className="inline-flex w-fit items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-sm font-bold text-slate-600">
+                        <Icon name="calendar" className="h-4 w-4" />
+                        {item.period}
+                      </span>
+                    </div>
+                    <p className="mt-5 max-w-3xl leading-7 text-slate-600">
+                      {item.description}
+                    </p>
+                  </div>
                 </article>
               </Reveal>
             ))}
           </div>
         </section>
       </Reveal>
+
       <Reveal>
-        <section
-          id="education"
-          className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-8"
-        >
-          <SectionTitle
-            eyebrow="Education"
-            title="A foundation in computer science and AI."
-          />
-          <div className="mt-10 grid gap-6">
-            {resume.education.map((item, index) => (
-              <Reveal key={`${item.institution}-${index}`} delay={index * 90}>
-                <article className="glass-card lift-card p-7 md:p-8">
-                  <EducationContent item={item} />
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </section>
-      </Reveal>
-      <Reveal>
-        <section
-          id="skills"
-          className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-8"
-        >
-          <SectionTitle
+        <section id="skills" className="section-shell section-rule">
+          <SectionHeading
+            icon="tool"
             eyebrow="Skills"
-            title="Tools I use to turn ideas into reliable products."
+            title="A focused toolkit, grouped for clarity."
+            text="The technologies I use to design, build, ship, and improve reliable applications."
           />
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
+          <div className="mt-9 grid gap-5 md:grid-cols-2">
             {resume.skill_groups.map((group, index) => (
-              <Reveal key={group.title} delay={index * 90}>
-                <article className="glass-card lift-card h-full p-7">
-                  <h3 className="text-xl font-bold">{group.title}</h3>
-                  <div className="mt-5 flex flex-wrap gap-2">
+              <Reveal key={group.title} delay={index * 75}>
+                <article className="glass-card skill-card h-full p-6">
+                  <div className="flex items-start gap-4">
+                    <span className={`icon-tile icon-tile-${index % 4}`}>
+                      <Icon
+                        name={
+                          index === 0
+                            ? "brain"
+                            : index === 1
+                              ? "code"
+                              : index === 2
+                                ? "tool"
+                                : "cloud"
+                        }
+                        className="h-5 w-5"
+                      />
+                    </span>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-950">
+                        {group.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {group.skills.length} technologies
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex flex-wrap gap-2">
                     {group.skills.map((skill) => (
                       <Tag key={skill}>{skill}</Tag>
                     ))}
@@ -358,74 +476,59 @@ export default async function Home() {
           </div>
         </section>
       </Reveal>
+
       <Reveal>
-        <section
-          id="languages"
-          className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-8"
-        >
-          <SectionTitle
-            eyebrow="Languages"
-            title="Communicating across cultures."
-          />
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {resume.languages.map((item, index) => (
-              <Reveal key={item.language} delay={index * 90}>
-                <article className="glass-card lift-card p-7">
-                  <h3 className="text-xl font-bold">{item.language}</h3>
-                  <p className="mt-3 font-semibold text-blue-600">
-                    {item.proficiency}
-                  </p>
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </section>
-      </Reveal>
-      <Reveal>
-        <section
-          id="projects"
-          className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-8"
-        >
-          <SectionTitle
+        <section id="projects" className="section-shell section-rule">
+          <SectionHeading
+            icon="folder"
             eyebrow="Selected work"
-            title="Projects from the portfolio."
+            title="Projects that turn ideas into products."
+            text="A selection of published work, each with its own stack and outcome."
           />
-          <div className="mt-10 grid gap-6 md:grid-cols-2">
+          <div className="mt-9 grid gap-5 md:grid-cols-2">
             {projects.length === 0 ? (
-              <div className="glass-card p-7 text-slate-600 md:col-span-2">
-                Published projects will appear here soon.
+              <div className="glass-card flex items-center gap-4 p-7 text-slate-600 md:col-span-2">
+                <span className="icon-tile icon-tile-1">
+                  <Icon name="folder" className="h-5 w-5" />
+                </span>
+                <p>Published projects will appear here soon.</p>
               </div>
             ) : (
               projects.map((project, index) => (
-                <Reveal key={project.id} delay={index * 100}>
-                  <article className="glass-card project-card group h-full overflow-hidden p-7">
-                    <div
-                      className={`project-line h-2 rounded-full ${index % 2 === 0 ? "bg-gradient-to-r from-blue-500 to-cyan-400" : "bg-gradient-to-r from-violet-500 to-fuchsia-400"}`}
-                    />
-                    <p className="mt-7 text-sm font-semibold text-blue-600">
-                      {project.is_featured
-                        ? "Featured work"
-                        : "Portfolio project"}
-                    </p>
-                    <h3 className="mt-2 text-2xl font-bold">{project.title}</h3>
+                <Reveal key={project.id} delay={index * 90}>
+                  <article className="glass-card project-card group flex h-full flex-col overflow-hidden p-7">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-black tracking-[.16em] text-slate-300">
+                        0{index + 1}
+                      </span>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${project.is_featured ? "bg-amber-100 text-amber-800" : "bg-blue-50 text-blue-700"}`}
+                      >
+                        {project.is_featured ? "Featured" : "Project"}
+                      </span>
+                    </div>
+                    <h3 className="mt-6 text-2xl font-bold tracking-tight text-slate-950">
+                      {project.title}
+                    </h3>
                     <p className="mt-4 leading-7 text-slate-600">
                       {project.summary}
                     </p>
-                    <div className="mt-7 flex flex-wrap gap-2">
+                    <div className="mt-6 flex flex-wrap gap-2">
                       {project.tech_stack.map((tech) => (
                         <Tag key={tech}>{tech}</Tag>
                       ))}
                     </div>
                     {(project.demo_url || project.repository_url) && (
-                      <div className="mt-7 flex flex-wrap gap-4 text-sm font-semibold">
+                      <div className="mt-7 flex flex-wrap gap-3 border-t border-slate-200/80 pt-5 text-sm font-bold">
                         {project.demo_url && (
                           <a
                             href={project.demo_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-link text-blue-600"
+                            className="inline-link inline-flex items-center gap-1.5 text-blue-700"
                           >
-                            View demo ↗
+                            <Icon name="external" className="h-4 w-4" /> Live
+                            demo
                           </a>
                         )}
                         {project.repository_url && (
@@ -433,9 +536,10 @@ export default async function Home() {
                             href={project.repository_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-link text-blue-600"
+                            className="inline-link inline-flex items-center gap-1.5 text-slate-700"
                           >
-                            View repository ↗
+                            <Icon name="github" className="h-4 w-4" />{" "}
+                            Repository
                           </a>
                         )}
                       </div>
@@ -447,16 +551,98 @@ export default async function Home() {
           </div>
         </section>
       </Reveal>
+
       <Reveal>
-        <section className="relative z-10 mx-auto max-w-6xl px-6 py-16 lg:px-8">
-          <SectionTitle
-            eyebrow="Research & credentials"
-            title="Learning, testing, and refining."
+        <section id="education" className="section-shell section-rule">
+          <SectionHeading
+            icon="graduation"
+            eyebrow="Education & languages"
+            title="Learning continuously and communicating clearly."
           />
-          <div className="mt-10 grid gap-6 lg:grid-cols-2">
-            <div className="glass-card lift-card p-7">
-              <h3 className="text-xl font-bold">Publications</h3>
-              <div className="mt-5 divide-y divide-slate-200/70">
+          <div className="mt-9 grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
+            <div className="space-y-4">
+              {resume.education.map((item, index) => (
+                <Reveal key={`${item.institution}-${index}`} delay={index * 80}>
+                  <article className="glass-card lift-card p-6">
+                    <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+                      <div>
+                        <p className="flex items-center gap-2 text-sm font-bold text-blue-700">
+                          <Icon name="graduation" className="h-4 w-4" />
+                          Education
+                        </p>
+                        <h3 className="mt-2 text-xl font-bold text-slate-950">
+                          {item.degree}
+                        </h3>
+                        <p className="mt-2 font-semibold text-slate-700">
+                          {item.institution}
+                        </p>
+                        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
+                          <Icon name="location" className="h-4 w-4" />
+                          {item.location}
+                        </p>
+                      </div>
+                      <span className="inline-flex h-fit w-fit items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-sm font-bold text-slate-600">
+                        <Icon name="calendar" className="h-4 w-4" />
+                        {item.period}
+                      </span>
+                    </div>
+                    {item.details && (
+                      <p className="mt-5 leading-7 text-slate-600">
+                        {item.details}
+                      </p>
+                    )}
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+            <aside className="glass-card p-6">
+              <div className="flex items-center gap-3">
+                <span className="icon-tile icon-tile-2">
+                  <Icon name="language" className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-wide text-slate-500">
+                    Languages
+                  </p>
+                  <h3 className="mt-1 text-xl font-bold">Communication</h3>
+                </div>
+              </div>
+              <div className="mt-5 divide-y divide-slate-200/80">
+                {resume.languages.map((language) => (
+                  <div
+                    key={language.language}
+                    className="flex items-center justify-between gap-3 py-4 first:pt-0"
+                  >
+                    <p className="font-bold text-slate-800">
+                      {language.language}
+                    </p>
+                    <span className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700">
+                      {language.proficiency}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          </div>
+        </section>
+      </Reveal>
+
+      <Reveal>
+        <section className="section-shell section-rule">
+          <SectionHeading
+            icon="book"
+            eyebrow="Research & credentials"
+            title="Evidence of continuous learning."
+          />
+          <div className="mt-9 grid gap-5 lg:grid-cols-2">
+            <article className="glass-card lift-card p-6">
+              <div className="flex items-center gap-3">
+                <span className="icon-tile icon-tile-3">
+                  <Icon name="book" className="h-5 w-5" />
+                </span>
+                <h3 className="text-xl font-bold">Publications</h3>
+              </div>
+              <div className="mt-5 divide-y divide-slate-200/80">
                 {resume.publications.map((publication) => (
                   <article key={publication.title} className="py-5 first:pt-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -465,11 +651,11 @@ export default async function Home() {
                       >
                         {publication.status}
                       </span>
-                      <p className="text-sm font-semibold text-blue-600">
+                      <span className="text-sm font-bold text-slate-500">
                         {publication.date}
-                      </p>
+                      </span>
                     </div>
-                    <h4 className="mt-3 leading-7 font-bold">
+                    <h4 className="mt-3 leading-7 font-bold text-slate-800">
                       {publication.title}
                     </h4>
                     {publication.doi && (
@@ -477,70 +663,96 @@ export default async function Home() {
                         href={doiHref(publication.doi)}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-link mt-3 inline-block text-sm font-semibold text-blue-600"
+                        className="inline-link mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-blue-700"
                       >
-                        DOI: {publication.doi} ↗
+                        <Icon name="external" className="h-4 w-4" /> DOI:{" "}
+                        {publication.doi}
                       </a>
                     )}
                   </article>
                 ))}
               </div>
-            </div>
-            <div className="glass-card lift-card p-7">
-              <h3 className="text-xl font-bold">Certifications</h3>
-              <div className="mt-5 divide-y divide-slate-200/70">
+            </article>
+            <article className="glass-card lift-card p-6">
+              <div className="flex items-center gap-3">
+                <span className="icon-tile icon-tile-0">
+                  <Icon name="award" className="h-5 w-5" />
+                </span>
+                <h3 className="text-xl font-bold">Certifications</h3>
+              </div>
+              <div className="mt-5 divide-y divide-slate-200/80">
                 {resume.certifications.map((certification) => (
-                  <article key={certification.name} className="py-5 first:pt-0">
-                    <h4 className="font-bold">{certification.name}</h4>
-                    <p className="mt-2 text-sm text-slate-600">
-                      {certification.issuer}
-                    </p>
+                  <article
+                    key={certification.name}
+                    className="flex gap-3 py-5 first:pt-0"
+                  >
+                    <Icon
+                      name="check"
+                      className="mt-1 h-5 w-5 shrink-0 text-emerald-600"
+                    />
+                    <div>
+                      <h4 className="font-bold text-slate-800">
+                        {certification.name}
+                      </h4>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {certification.issuer}
+                      </p>
+                    </div>
                   </article>
                 ))}
               </div>
-            </div>
+            </article>
           </div>
         </section>
       </Reveal>
+
       <Reveal>
         <section
           id="contact"
-          className="relative z-10 mx-auto max-w-6xl px-6 pb-24 pt-16 lg:px-8"
+          className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-8 lg:px-8"
         >
-          <div className="contact-card rounded-[2rem] bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-8 text-white shadow-2xl shadow-blue-500/20 md:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-100">
-              Get in touch
-            </p>
-            <h2 className="mt-4 max-w-2xl text-4xl font-bold tracking-tight md:text-5xl">
-              Let&apos;s build something useful.
-            </h2>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-blue-100">
-              I&apos;m open to full-stack software-development opportunities and
-              collaborations.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <a
-                href={`mailto:${profile.email}`}
-                className="rounded-full bg-white px-6 py-3 font-semibold text-blue-700 transition hover:-translate-y-1"
-              >
-                Email me
-              </a>
-              <a
-                href={profile.github_url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-white/30 px-6 py-3 font-semibold text-white transition hover:-translate-y-1 hover:bg-white/10"
-              >
-                GitHub
-              </a>
-              <a
-                href={profile.linkedin_url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-white/30 px-6 py-3 font-semibold text-white transition hover:-translate-y-1 hover:bg-white/10"
-              >
-                LinkedIn
-              </a>
+          <div className="contact-card overflow-hidden rounded-4xl bg-slate-950 p-8 text-white shadow-2xl shadow-slate-900/20 md:p-12">
+            <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[.16em] text-blue-200">
+                  <Icon name="sparkle" className="h-4 w-4" />
+                  Let&apos;s connect
+                </p>
+                <h2 className="mt-4 max-w-2xl text-4xl font-black tracking-[-.04em] md:text-5xl">
+                  Have a web project in mind?
+                </h2>
+                <p className="mt-5 max-w-xl text-lg leading-8 text-slate-300">
+                  I&apos;m open to full-stack software-development opportunities
+                  and collaborations.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href={`mailto:${profile.email}`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3.5 font-bold text-slate-950 transition hover:-translate-y-1"
+                >
+                  <Icon name="mail" className="h-4 w-4" />
+                  Email me
+                </a>
+                <a
+                  href={profile.github_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="GitHub profile"
+                  className="icon-button"
+                >
+                  <Icon name="github" className="h-5 w-5" />
+                </a>
+                <a
+                  href={profile.linkedin_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="LinkedIn profile"
+                  className="icon-button"
+                >
+                  <Icon name="linkedin" className="h-5 w-5" />
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -549,42 +761,238 @@ export default async function Home() {
   );
 }
 
-function ExperienceContent({ item }: { item: ExperienceItem }) {
+function NavLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <>
-      <div className="flex flex-col justify-between gap-3 md:flex-row">
-        <div>
-          <h3 className="text-2xl font-bold">{item.role}</h3>
-          <p className="mt-2 font-semibold text-blue-600">{item.company}</p>
-          <p className="mt-1 text-sm text-slate-500">{item.location}</p>
-        </div>
-        <p className="font-semibold text-slate-600">{item.period}</p>
+    <a href={href} className="nav-link">
+      {children}
+    </a>
+  );
+}
+function Metric({ icon, label }: { icon: IconName; label: string }) {
+  return (
+    <div className="flex items-center gap-2 text-sm font-bold text-slate-600">
+      <Icon name={icon} className="h-4 w-4 text-blue-600" />
+      {label}
+    </div>
+  );
+}
+function FocusCard({
+  icon,
+  title,
+  text,
+}: {
+  icon: IconName;
+  title: string;
+  text: string;
+}) {
+  return (
+    <article className="glass-card flex items-center gap-4 p-5">
+      <span className="icon-tile icon-tile-1">
+        <Icon name={icon} className="h-5 w-5" />
+      </span>
+      <div>
+        <h3 className="font-bold text-slate-950">{title}</h3>
+        <p className="mt-1 text-sm leading-5 text-slate-500">{text}</p>
       </div>
-      <p className="mt-5 max-w-3xl leading-7 text-slate-600">
-        {item.description}
+    </article>
+  );
+}
+function SectionHeading({
+  icon,
+  eyebrow,
+  title,
+  text,
+}: {
+  icon: IconName;
+  eyebrow: string;
+  title: string;
+  text?: string;
+}) {
+  return (
+    <div className="max-w-3xl">
+      <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[.16em] text-blue-700">
+        <Icon name={icon} className="h-4 w-4" />
+        {eyebrow}
       </p>
-    </>
-  );
-}
-function EducationContent({ item }: { item: EducationItem }) {
-  return (
-    <>
-      <div className="flex flex-col justify-between gap-3 md:flex-row">
-        <div>
-          <h3 className="text-2xl font-bold">{item.degree}</h3>
-          <p className="mt-2 font-semibold text-blue-600">{item.institution}</p>
-          <p className="mt-1 text-sm text-slate-500">{item.location}</p>
-        </div>
-        <p className="font-semibold text-slate-600">{item.period}</p>
-      </div>
-      {item.details && (
-        <p className="mt-5 max-w-3xl leading-7 text-slate-600">
-          {item.details}
-        </p>
+      <h2 className="mt-3 text-3xl font-black tracking-[-.035em] text-slate-950 md:text-4xl">
+        {title}
+      </h2>
+      {text && (
+        <p className="mt-3 max-w-2xl leading-7 text-slate-600">{text}</p>
       )}
-    </>
+    </div>
   );
 }
+function Tag({ children }: { children: ReactNode }) {
+  return (
+    <span className="skill-tag rounded-lg border border-blue-100 bg-blue-50/80 px-2.5 py-1.5 text-sm font-semibold text-blue-800">
+      {children}
+    </span>
+  );
+}
+
+type IconName =
+  | "arrow"
+  | "award"
+  | "book"
+  | "brain"
+  | "briefcase"
+  | "calendar"
+  | "chart"
+  | "check"
+  | "cloud"
+  | "code"
+  | "external"
+  | "folder"
+  | "github"
+  | "graduation"
+  | "language"
+  | "leaf"
+  | "linkedin"
+  | "location"
+  | "mail"
+  | "sparkle"
+  | "tool"
+  | "user";
+function Icon({
+  name,
+  className = "",
+}: {
+  name: IconName;
+  className?: string;
+}) {
+  const paths: Record<IconName, ReactNode> = {
+    arrow: (
+      <>
+        <path d="M5 12h14" />
+        <path d="m13 6 6 6-6 6" />
+      </>
+    ),
+    award: (
+      <>
+        <circle cx="12" cy="8" r="5" />
+        <path d="M8.5 12.5 7 21l5-3 5 3-1.5-8.5" />
+      </>
+    ),
+    book: (
+      <>
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+      </>
+    ),
+    brain: (
+      <>
+        <path d="M9.5 4.5A3.5 3.5 0 0 0 6 8v.5a3.5 3.5 0 0 0-1 6.8V16a3.5 3.5 0 0 0 4 3.5" />
+        <path d="M14.5 4.5A3.5 3.5 0 0 1 18 8v.5a3.5 3.5 0 0 1 1 6.8V16a3.5 3.5 0 0 1-4 3.5" />
+        <path d="M12 4v16" />
+        <path d="M8 10h4M12 14h4" />
+      </>
+    ),
+    briefcase: (
+      <>
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2" />
+      </>
+    ),
+    calendar: (
+      <>
+        <rect x="3" y="5" width="18" height="16" rx="2" />
+        <path d="M16 3v4M8 3v4M3 11h18" />
+      </>
+    ),
+    chart: (
+      <>
+        <path d="M3 3v18h18" />
+        <path d="m7 15 4-4 3 3 5-7" />
+      </>
+    ),
+    check: <path d="m5 12 4 4L19 6" />,
+    cloud: (
+      <path d="M17.5 19H8a5 5 0 1 1 .7-9.95A6 6 0 0 1 20 11.5 3.5 3.5 0 0 1 17.5 19Z" />
+    ),
+    code: <path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14" />,
+    external: (
+      <>
+        <path d="M14 3h7v7" />
+        <path d="M10 14 21 3" />
+        <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+      </>
+    ),
+    folder: (
+      <path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+    ),
+    github: (
+      <>
+        <path d="M15 22v-3.9c0-1 .2-1.7.7-2.3-2.3.3-4.7-1.1-4.7-5A3.9 3.9 0 0 1 12 8.1 3.6 3.6 0 0 1 12.1 5s.9-.3 2.9 1.1a10 10 0 0 1 5.3 0C22.3 4.7 23.2 5 23.2 5a3.6 3.6 0 0 1 .1 3.1 3.9 3.9 0 0 1 1 2.7c0 3.9-2.4 5.3-4.7 5 .5.6.7 1.4.7 2.3V22" />
+        <path d="M9 18c-2 .6-3.5 0-4.5-1.5" />
+      </>
+    ),
+    graduation: (
+      <>
+        <path d="m2 10 10-5 10 5-10 5Z" />
+        <path d="M6 12v5c3 2 9 2 12 0v-5M22 10v6" />
+      </>
+    ),
+    language: (
+      <path d="m5 8 6-5 6 5M7 6c0 6 2 10 5 13M12 3c2 3 4 5 7 6M4 18h10" />
+    ),
+    leaf: (
+      <>
+        <path d="M20 4C10 4 4 9 4 17c0 2 .8 3 2 3 8 0 13-6 14-16Z" />
+        <path d="M4 20c3-5 7-8 12-11" />
+      </>
+    ),
+    linkedin: (
+      <>
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M8 10v6M8 7v.01M12 16v-3a2 2 0 0 1 4 0v3M12 10v6" />
+      </>
+    ),
+    location: (
+      <>
+        <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+        <circle cx="12" cy="10" r="2" />
+      </>
+    ),
+    mail: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="m3 7 9 6 9-6" />
+      </>
+    ),
+    sparkle: (
+      <>
+        <path d="m12 3-1.5 5.5L5 10l5.5 1.5L12 17l1.5-5.5L19 10l-5.5-1.5Z" />
+        <path d="m5 17-.7 2.3L2 20l2.3.7L5 23l.7-2.3L8 20l-2.3-.7Z" />
+      </>
+    ),
+    tool: (
+      <path d="M14.7 6.3a4.5 4.5 0 0 0-5.9 5.9L3 18a2.1 2.1 0 0 0 3 3l5.8-5.8a4.5 4.5 0 0 0 5.9-5.9l-3.2 3.2-2.3-2.3Z" />
+    ),
+    user: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </>
+    ),
+  };
+
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      {paths[name]}
+    </svg>
+  );
+}
+
 type UnknownRecord = Record<string, unknown>;
 function record(value: unknown): UnknownRecord {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -682,23 +1090,4 @@ function doiHref(doi: string) {
   return doi.startsWith("http://") || doi.startsWith("https://")
     ? doi
     : `https://doi.org/${doi.replace(/^doi:\\s*/i, "")}`;
-}
-function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return (
-    <div className="section-title">
-      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-600">
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 max-w-2xl text-3xl font-bold tracking-tight md:text-4xl">
-        {title}
-      </h2>
-    </div>
-  );
-}
-function Tag({ children }: { children: ReactNode }) {
-  return (
-    <span className="skill-tag rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700">
-      {children}
-    </span>
-  );
 }
