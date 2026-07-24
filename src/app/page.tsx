@@ -226,7 +226,7 @@ export default async function Home() {
     .slice(0, 6);
 
   return (
-    <main className="min-h-screen overflow-hidden bg-slate-50 text-slate-900">
+    <main className="portfolio-main min-h-screen overflow-x-clip bg-slate-50 text-slate-900">
       <MotionStyles />
       <div className="aurora aurora-one motion-aurora-one" />
       <div className="aurora aurora-two motion-aurora-two" />
@@ -305,16 +305,18 @@ export default async function Home() {
             <Metric icon="cloud" label="Backend" />
           </div>
         </div>
-        <div className="relative mx-auto w-full max-w-md lg:mx-0 lg:justify-self-end">
-          <div className="profile-photo-card glass-card overflow-hidden p-3 sm:p-4">
-            <div className="profile-photo-frame aspect-[4/4.6]">
-              <ProfilePhoto
-                src={profile.profile_photo_url}
-                alt={`Portrait of ${profile.name}`}
-                className="profile-photo"
-              />
+        <div className="relative mx-auto flex w-full max-w-md justify-center lg:mx-0 lg:justify-self-end">
+          <div className="profile-photo-card">
+            <div className="profile-photo-ring">
+              <div className="profile-photo-frame">
+                <ProfilePhoto
+                  src={profile.profile_photo_url}
+                  alt={`Portrait of ${profile.name}`}
+                  className="profile-photo"
+                />
+              </div>
             </div>
-            <div className="flex items-center justify-between gap-3 px-2 pb-1 pt-5">
+            <div className="mt-5 flex items-center justify-center gap-3 text-center">
               <div>
                 <p className="text-sm font-bold text-slate-950">
                   {profile.name}
@@ -324,21 +326,6 @@ export default async function Home() {
               <span className="rounded-xl bg-blue-50 p-2.5 text-blue-700">
                 <Icon name="location" className="h-5 w-5" />
               </span>
-            </div>
-          </div>
-          <div className="hero-floating-note absolute -bottom-6 -left-5 hidden rounded-2xl border border-white/70 bg-white/90 p-4 shadow-xl shadow-slate-900/10 backdrop-blur sm:block">
-            <div className="flex items-center gap-3">
-              <span className="rounded-xl bg-violet-100 p-2 text-violet-700">
-                <Icon name="briefcase" className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
-                  Open to
-                </p>
-                <p className="mt-0.5 text-sm font-bold text-slate-800">
-                  New opportunities
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -450,7 +437,7 @@ export default async function Home() {
                             : index === 1
                               ? "code"
                               : index === 2
-                                ? "tool"
+                                ? "check"
                                 : "cloud"
                         }
                         className="h-5 w-5"
@@ -711,7 +698,7 @@ export default async function Home() {
           id="contact"
           className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-8 lg:px-8"
         >
-          <div className="contact-card overflow-hidden rounded-4xl bg-slate-950 p-8 text-white shadow-2xl shadow-slate-900/20 md:p-12">
+          <div className="contact-card overflow-hidden rounded-[2rem] bg-slate-950 p-8 text-white shadow-2xl shadow-slate-900/20 md:p-12">
             <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
                 <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-[.16em] text-blue-200">
